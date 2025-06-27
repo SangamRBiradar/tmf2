@@ -1,33 +1,43 @@
 name: Desktop File Ops
 
 on:
-  workflow_dispatch:  # lets you run it manually
+  workflow_dispatch:  # Allows manual trigger from GitHub UI
 
 jobs:
-  file_tasks:
-    runs-on: self-hosted
+  file_operations:
+    runs-on: self-hosted  # Assumes your runner is a Windows machine
 
     steps:
-      - name: Create folder1 and file 1.txt on Desktop
-        shell: pwsh
+      - name: Step 1 - Create folder1 and 1.txt on Desktop
+        shell: powershell
         run: |
           $desktop = [Environment]::GetFolderPath("Desktop")
           $folder1 = Join-Path $desktop "folder1"
           New-Item -ItemType Directory -Path $folder1 -Force
           $file1 = Join-Path $folder1 "1.txt"
-          Set-Content -Path $file1 -Value "Created via GitHub Actions"
+          Set-Content -Path $file1 -Value "Created via GitHub Actions with a self-hosted runner."
 
-      - name: Create folder2 on Desktop
-        shell: pwsh
+      - name: Step 2 - Create folder2 on Desktop
+        shell: powershell
         run: |
           $desktop = [Environment]::GetFolderPath("Desktop")
           $folder2 = Join-Path $desktop "folder2"
           New-Item -ItemType Directory -Path $folder2 -Force
 
-      - name: Copy 1.txt from folder1 to folder2
-        shell: pwsh
+      - name: Step 3 - Copy 1.txt from folder1 to folder2
+        shell: powershell
         run: |
           $desktop = [Environment]::GetFolderPath("Desktop")
-          $source = Join-Path $desktop "folder1\1.txt"
-          $destination = Join-Path $desktop "folder2\1.txt"
-          Copy-Item -Path $source -Destination $destination -Force
+          $sourceFile = Join-Path $desktop "folder1\1.txt"
+          $destinationFolder = Join-Path $desktop "folder2"
+          Copy-Item -Path $sourceFile -Destination $destinationFolder -Force
+
+      - name: Step 4 - Confirm the file was copied
+        shell: powershell
+        run: |
+          $destinationFile = [System.IO.Path]::Combine([Environment]::GetFolderPath("Desktop"), "folder2\1.txt")
+          if (Test-Path $destinationFile) {
+            Write-Host "✅ File successfully copied!"
+          } else {
+            Write-Error "❌ File copy failed."
+          }
