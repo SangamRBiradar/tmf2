@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         MAVEN_HOME = tool 'Maven 3'
-        SONAR_TOKEN = credentials('sonar-token') // Add this in Jenkins credentials
+        SONAR_TOKEN = credentials('sonar-token') // Jenkins credential
     }
 
     stages {
@@ -25,14 +25,14 @@ pipeline {
                     sh """
                         ${MAVEN_HOME}/bin/mvn sonar:sonar \
                         -Dsonar.projectKey=<your-project-key> \
-                        -Dsonar.organization=<your-organization> \
+                        -Dsonar.organization=<your-org> \
                         -Dsonar.login=${SONAR_TOKEN}
                     """
                 }
             }
         }
 
-        stage('Package Build') {
+        stage('Build Package') {
             steps {
                 sh "${MAVEN_HOME}/bin/mvn clean package"
             }
@@ -47,7 +47,7 @@ pipeline {
 
     post {
         always {
-            // Run in workspace context to avoid FilePath error
+            // Ensures JUnit test results are processed in proper workspace context
             node {
                 junit '**/target/surefire-reports/*.xml'
             }
