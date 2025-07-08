@@ -1,11 +1,48 @@
 pipeline {
     agent any
 
+    environment {
+        SONAR_TOKEN = credentials('sonar-token')   // Add this in Jenkins credentials
+        MAVEN_HOME = tool 'Maven 3'               // Set up your Maven tool in Jenkins
+    }
+
     stages {
-        stage('Hello') {
+        stage('Checkout') {
             steps {
-                echo 'Hello pranav prateek sangam jjj'
+                git url: 'https://github.com/<your-org>/<your-repo>.git', branch: 'main'
             }
+        }
+
+        stage('Selenium Tests') {
+            steps {
+                sh "${MAVEN_HOME}/bin/mvn test -Dtest=YourSeleniumTestClass"
+            }
+        }
+
+        stage('SonarCloud Analysis') {
+            steps {
+                withSonarQubeEnv('SonarCloud') {
+                    sh "${MAVEN_HOME}/bin/mvn sonar:sonar -Dsonar.projectKey=<projectKey> -Dsonar.organization=<org> -Dsonar.login=$SONAR_TOKEN"
+                }
+            }
+        }
+
+        stage('Build Package') {
+            steps {
+                sh "${MAVEN_HOME}/bin/mvn package"
+            }
+        }
+
+        stage('Archive Artifacts') {
+            steps {
+                archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
+            }
+        }
+    }
+
+    post {
+        always {
+            junit '**/target/surefire-reports/*.xml'
         }
     }
 }
